@@ -97,47 +97,7 @@ GBC_emulator_core.prototype.key_up = function (event) {
   else if (event.keyCode === 39) this.buttons.right = false;
 };
 GBC_emulator_core.prototype.mem_read = function (address) {
-  address &= 0xffff;
-  if (address >= 0xff10 && address <= 0xff3f) {
-    return sound.readMem(address);
-  }
-  if (address >= 0x8000 && address < 0xa000) return this.video.mem_read(address);
-  else if ((address >= 0xfe00 && address < 0xfea0) || address === 0xff55 || address === 0xff4f)
-    return this.video.mem_read(address);
-  else if (address === 0xffff) return this.interrupt_enable;
-  else if (address < 0xff00 || address >= 0xff80 || address === 0xff70)
     return this.memory.mem_read(address);
-  else if (address === 0xff00) {
-    if (this.keypad_nibble_requested === 0) {
-      return (
-        (this.buttons.a ? 0 : 1) |
-        (this.buttons.b ? 0 : 2) |
-        (this.buttons.select ? 0 : 4) |
-        (this.buttons.start ? 0 : 8)
-      );
-    } else {
-      return (
-        (this.buttons.right ? 0 : 1) |
-        (this.buttons.left ? 0 : 2) |
-        (this.buttons.up ? 0 : 4) |
-        (this.buttons.down ? 0 : 8)
-      );
-    }
-  } else if (address >= 0xff04 && address <= 0xff07) return this.timer.reg_read(address);
-  else if (address === 0xff0f) return this.interrupt_flags;
-  else if (address === 0xff46) return 0;
-  else if (address === 0xff4d) return this.speed_switch_unlocked | (this.cpu_speed << 7);
-  else if (address === 0xff51 && this.memory.cgb_game && !this.vram_dma_running)
-    return this.vram_dma_source >>> 8;
-  else if (address === 0xff52 && this.memory.cgb_game && !this.vram_dma_running)
-    return this.vram_dma_source & 0xff;
-  else if (address === 0xff53 && this.memory.cgb_game && !this.vram_dma_running)
-    return this.vram_dma_destination >>> 8;
-  else if (address === 0xff54 && this.memory.cgb_game && !this.vram_dma_running)
-    return this.vram_dma_destination & 0xff;
-  else if (address >= 0xff40 && address <= 0xff4b) return this.video.mem_read(address);
-  else if (address >= 0xff68 && address <= 0xff6b) return this.video.mem_read(address);
-  else return 0;
 };
 GBC_emulator_core.prototype.mem_write = function (address, value) {
   address &= 0xffff;

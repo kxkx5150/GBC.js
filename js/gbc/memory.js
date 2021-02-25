@@ -124,8 +124,41 @@ GBC_memory.prototype.write_save_file = function () {
   }
 };
 GBC_memory.prototype.mem_read = function (address) {
-  if (address < 0x8000) {
+  address &= 0xffff;
+  if (address === 0xffff) return this.core.interrupt_enable;
+  else if (address === 0xff0f) return this.core.interrupt_flags;
+  else if (address === 0xff46) return 0;
+  else if (address === 0xff4d) return this.core.speed_switch_unlocked | (this.core.cpu_speed << 7);
+  else if (address === 0xff51 && this.cgb_game && !this.core.vram_dma_running)
+    return this.core.vram_dma_source >>> 8;
+  else if (address === 0xff52 && this.cgb_game && !this.core.vram_dma_running)
+    return this.core.vram_dma_source & 0xff;
+  else if (address === 0xff53 && this.cgb_game && !this.core.vram_dma_running)
+    return this.core.vram_dma_destination >>> 8;
+  else if (address === 0xff54 && this.cgb_game && !this.core.vram_dma_running)
+    return this.core.vram_dma_destination & 0xff;
+  else if (address === 0xff00) {
+    if (this.core.keypad_nibble_requested === 0) {
+      return (
+        (this.core.buttons.a ? 0 : 1) |
+        (this.core.buttons.b ? 0 : 2) |
+        (this.core.buttons.select ? 0 : 4) |
+        (this.core.buttons.start ? 0 : 8)
+      );
+    } else {
+      return (
+        (this.core.buttons.right ? 0 : 1) |
+        (this.core.buttons.left ? 0 : 2) |
+        (this.core.buttons.up ? 0 : 4) |
+        (this.core.buttons.down ? 0 : 8)
+      );
+    }
+  } else if (address === 0xff70) {
+    return this.wram_bank;
+  } else if (address < 0x8000) {
     return this.mapper.mem_read(address);
+  }else if (address >= 0x8000 && address < 0xa000){
+   return this.core.video.mem_read(address);
   } else if (address < 0xc000) {
     if (this.ram_size === 1) address &= 0xe7ff;
     return this.mapper.mem_read(address);
@@ -135,8 +168,16 @@ GBC_memory.prototype.mem_read = function (address) {
     return this.working_ram[this.wram_bank * 0x1000 + address - 0xd000];
   } else if (address < 0xfe00) {
     return this.mem_read(address - 0x2000);
-  } else if (address === 0xff70) {
-    return this.wram_bank;
+  } else if ((address >= 0xfe00 && address < 0xfea0) || address === 0xff55 || address === 0xff4f) {
+    return this.core.video.mem_read(address);
+  } else if (address >= 0xff04 && address <= 0xff07) {
+    return this.core.timer.reg_read(address);
+  } else if (address >= 0xff10 && address <= 0xff3f) {
+    return this.core.sound.readMem(address);
+  } else if (address >= 0xff40 && address <= 0xff4b) {
+    return this.core.video.mem_read(address);
+  } else if (address >= 0xff68 && address <= 0xff6b) {
+    return this.core.video.mem_read(address);
   } else if (address >= 0xff80) {
     return this.zero_page[address & 0x007f];
   }
