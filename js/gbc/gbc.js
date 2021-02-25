@@ -32,11 +32,7 @@ GBC_emulator_core.prototype.run_one_frame = function () {
     cycles_per_frame = this.cpu_speed ? this.CPU_CYCLES_PER_FRAME_CGB : this.CPU_CYCLES_PER_FRAME_DMG;
   while (cycle_counter <= cycles_per_frame) {
     var new_cycles = this.cpu.run_instruction();
-    soundStepCountdown -= new_cycles;
-    if (soundStepCountdown < 0) {
-      soundStepCountdown += soundStepClocks;
-      sound.soundStep();
-    }
+    sound.countDown(new_cycles)
     new_cycles += this.video.clock(new_cycles * (this.cpu_speed ? 0.5 : 1)) * (this.cpu_speed ? 2 : 1);
     this.timer.clock(new_cycles);
     cycle_counter += new_cycles;

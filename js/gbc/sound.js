@@ -1,9 +1,15 @@
 "use strict";
-var requestStop = true;
 const audioCtx = new AudioContext();
-const soundStepClocks = 4194304 / 256;
-var soundStepCountdown = soundStepClocks;
 const sound = {
+  soundStepClocks:4194304 / 256,
+  soundStepCountdown:4194304 / 256,
+  countDown:function(int){
+    sound.soundStepCountdown -= int;
+    if (sound.soundStepCountdown < 0) {
+      sound.soundStepCountdown += sound.soundStepClocks;
+      sound.soundStep();
+    }
+  },
   1: {
     oscillator: audioCtx.createOscillator(),
     freq: function (f) {
@@ -312,10 +318,22 @@ const sound = {
         var con = (sound.MEM2[0xff25] ^ data) & data;
         var dis = (sound.MEM2[0xff25] ^ data) & ~data;
         for (var i = 0; i < 4; i++) {
-          if (con & (1 << i)) sound[i + 1].gainNode.connect(sound.SO1);
-          if (dis & (1 << i)) sound[i + 1].gainNode.disconnect(sound.SO1);
-          if (con & (1 << (4 + i))) sound[i + 1].gainNode.connect(sound.SO2);
-          if (dis & (1 << (4 + i))) sound[i + 1].gainNode.disconnect(sound.SO2);
+          if (con & (1 << i))sound[i + 1].gainNode.connect(sound.SO1);
+          if (dis & (1 << i)) {
+            try {
+              sound[i + 1].gainNode.disconnect(sound.SO1);
+            } catch (error) { 
+              console.log(sound[i + 1].gainNode);
+            }
+          }
+          if (con & (1 << (4 + i)))sound[i + 1].gainNode.connect(sound.SO2);
+          if (dis & (1 << (4 + i))){
+            try {
+              sound[i + 1].gainNode.disconnect(sound.SO2);
+            } catch (error) { 
+              console.log(sound[i + 1].gainNode);
+            }
+          }
         }
         sound.MEM2[addr] = data;
         return;
