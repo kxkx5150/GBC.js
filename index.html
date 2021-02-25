@@ -1,32 +1,47 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Cache-Control" content="no-cache" />
-    <meta name="author" content="Kunihiro Ando" />
-    <title>GBC.js</title>
-    <link href="css/style.css" rel="stylesheet" />
-  </head>
-  <body>
-    <div>
-      <input type="file" id="file_input" />
-    </div>
-    <div>
-      <!--
+<head>
+  <title>GBC.js</title>
+  <meta charset="utf-8" />
+  <meta name="description" content="Gameboy css only" />
+  <meta charset="UTF-8" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Cache-Control" content="no-cache" />
+  <meta name="author" content="Kunihiro Ando" />
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body>
+  <div>
+    <input type="file" id="file_input" />
+  </div>
+  <div class="gameboy">
+    <div class="screen-cont">
+      <div class="power"></div>
+      <div class="screen">
+        <!--
             Copyright (c) 安東　邦泰
             Kunihiro Ando
             Released under the MIT license
             http://opensource.org/licenses/mit-license.php
       -->
-      <canvas id="output" width="160" height="144"> </canvas>
+        <canvas id="output" width="160" height="144"> </canvas>
+      </div>
     </div>
-    <script src="./js/gbc/memory.js"></script>
-    <script src="./js/gbc/cpu.js"></script>
-    <script src="./js/gbc/video.js"></script>
-    <script src="./js/gbc/timer.js"></script>
-    <script src="./js/gbc/sound.js"></script>
-    <script src="./js/gbc/gbc.js"></script>
-    <script src="./js/index.js"></script>
-  </body>
-</html>
+    <div class="controls-cont">
+      <div class="btn-direction">
+        <div class="vertical"></div>
+        <div class="horizontal"></div>
+      </div>
+      <div class="btn-AB"></div>
+      <div class="btn-start-select"></div>
+    </div>
+    <div class="speakers"></div>
+    <div class="on-off">< off-on ></div>
+    <div class="phones">phones</div>
+  </div>
+  <script src="./js/gbc/memory.js"></script>
+  <script src="./js/gbc/cpu.js"></script>
+  <script src="./js/gbc/video.js"></script>
+  <script src="./js/gbc/timer.js"></script>
+  <script src="./js/gbc/sound.js"></script>
+  <script src="./js/gbc/gbc.js"></script>
+  <script src="./js/index.js"></script>
+</body>
