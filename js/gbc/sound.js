@@ -1,61 +1,40 @@
 "use strict";
 const audioCtx = new AudioContext();
 const sound = {
+  MEM2: new Uint8Array(0x10000),
+  SoundEnabled: false,
+  FFTsize: 512,
+  lfsrPhase: 0,
+  soundPrescaler1: 0,
+  soundPrescaler2: 0,
+  reverseTable: null,
   soundStepClocks:4194304 / 256,
   soundStepCountdown:4194304 / 256,
-  countDown:function(int){
+  lfsr7bit: new Float32Array(127),
+  lfsr15bit: new Float32Array(32767),
+  final: audioCtx.createChannelMerger(2),
+  SO1: audioCtx.createGain(),
+  SO2: audioCtx.createGain(),
+  pulses: [],
+  snd4bit4: [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 16384, 16384],
+  snd4bit3: [
+    4 / 4194304,
+    8 / 4194304,
+    16 / 4194304,
+    24 / 4194304,
+    32 / 4194304,
+    40 / 4194304,
+    48 / 4194304,
+    56 / 4194304,
+  ],
+  countDown(int){
     sound.soundStepCountdown -= int;
     if (sound.soundStepCountdown < 0) {
       sound.soundStepCountdown += sound.soundStepClocks;
       sound.soundStep();
     }
   },
-  1: {
-    oscillator: audioCtx.createOscillator(),
-    freq: function (f) {
-      sound[1].oscillator.frequency.setValueAtTime(f, audioCtx.currentTime);
-    },
-    duty: function (d) {
-      sound[1].oscillator.setPeriodicWave(sound.pulses[d]);
-    },
-    sweepTime: 0,
-    sweepDir: 1,
-    sweepShift: 0,
-    sweepPrescaler: 0,
-    freqnum: 0,
-  },
-  2: {
-    oscillator: audioCtx.createOscillator(),
-    freq: function (f) {
-      sound[2].oscillator.frequency.setValueAtTime(f, audioCtx.currentTime);
-    },
-    duty: function (d) {
-      sound[2].oscillator.setPeriodicWave(sound.pulses[d]);
-    },
-  },
-  3: {
-    oscillator: audioCtx.createOscillator(),
-    freq: function (f) {
-      sound[3].oscillator.frequency.setValueAtTime(f, audioCtx.currentTime);
-    },
-    waveChanged: true,
-  },
-  4: {
-    oscillator: audioCtx.createScriptProcessor(2048, 1, 1),
-    polySteps: function (x) {
-      sound.lfsrPhase = 0;
-      sound[4].oscillator.onaudioprocess = x ? sound.processLFSR7bit : sound.processLFSR15bit;
-    },
-    bitPeriod: 1,
-    freq: function (bits4, bits3) {
-      sound[4].bitPeriod = audioCtx.sampleRate * sound.snd4bit4[bits4] * sound.snd4bit3[bits3];
-    },
-  },
-  SO1: audioCtx.createGain(),
-  SO2: audioCtx.createGain(),
-  pulses: [],
-  final: audioCtx.createChannelMerger(2),
-  start: () => {
+  start(){
     for (var i = 1; i <= 4; i++) {
       sound[i].gainNode = audioCtx.createGain();
       sound[i].amp = function (a) {
@@ -89,19 +68,7 @@ const sound = {
     sound.pulses.push(sound.generatePulseWave(0.75));
     sound.resetSoundRegisters();
   },
-  FFTsize: 512,
-  snd4bit4: [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 16384, 16384],
-  snd4bit3: [
-    4 / 4194304,
-    8 / 4194304,
-    16 / 4194304,
-    24 / 4194304,
-    32 / 4194304,
-    40 / 4194304,
-    48 / 4194304,
-    56 / 4194304,
-  ],
-  processLFSR7bit: function (e) {
+  processLFSR7bit(e) {
     var output = e.outputBuffer.getChannelData(0);
     var j = 1 / sound[4].bitPeriod;
     for (var i = 0; i < 2048; i++) {
@@ -110,7 +77,7 @@ const sound = {
       output[i] = sound.lfsr7bit[~~sound.lfsrPhase];
     }
   },
-  processLFSR15bit: function (e) {
+  processLFSR15bit(e) {
     var output = e.outputBuffer.getChannelData(0);
     var j = Math.ceil(sound[4].bitPeriod);
     for (var i = 0; i < 2048; i += j) {
@@ -144,9 +111,6 @@ const sound = {
       sound.lfsr15bit[st++] = bit / 4 - 0.125;
     } while (lfsr != start_state);
   },
-  lfsr7bit: new Float32Array(127),
-  lfsr15bit: new Float32Array(32767),
-  lfsrPhase: 0,
   generatePulseWave(duty) {
     var res = 256;
     var real = new Float32Array(res);
@@ -411,7 +375,6 @@ const sound = {
     );
     sound[3].waveChanged = false;
   },
-  reverseTable: null,
   resetSoundRegisters() {
     sound.MEM2[0xff10] = 0x80;
     sound.MEM2[0xff11] = 0xbf;
@@ -437,8 +400,7 @@ const sound = {
     sound.MEM2[0xff25] = 0xf3;
     sound.MEM2[0xff26] = 0xf1;
   },
-  MEM2: new Uint8Array(0x10000),
-  readMem: function (addr) {
+  readMem(addr){
     return sound.MEM2[addr];
   },
   soundStep() {
@@ -518,8 +480,46 @@ const sound = {
       sound[1].freq(131072 / (2048 - sound[1].freqnum));
     }
   },
-  SoundEnabled: false,
-  soundPrescaler1: 0,
-  soundPrescaler2: 0,
+  1: {
+    oscillator: audioCtx.createOscillator(),
+    freq: function (f) {
+      sound[1].oscillator.frequency.setValueAtTime(f, audioCtx.currentTime);
+    },
+    duty: function (d) {
+      sound[1].oscillator.setPeriodicWave(sound.pulses[d]);
+    },
+    sweepTime: 0,
+    sweepDir: 1,
+    sweepShift: 0,
+    sweepPrescaler: 0,
+    freqnum: 0,
+  },
+  2: {
+    oscillator: audioCtx.createOscillator(),
+    freq: function (f) {
+      sound[2].oscillator.frequency.setValueAtTime(f, audioCtx.currentTime);
+    },
+    duty: function (d) {
+      sound[2].oscillator.setPeriodicWave(sound.pulses[d]);
+    },
+  },
+  3: {
+    oscillator: audioCtx.createOscillator(),
+    freq: function (f) {
+      sound[3].oscillator.frequency.setValueAtTime(f, audioCtx.currentTime);
+    },
+    waveChanged: true,
+  },
+  4: {
+    oscillator: audioCtx.createScriptProcessor(2048, 1, 1),
+    polySteps: function (x) {
+      sound.lfsrPhase = 0;
+      sound[4].oscillator.onaudioprocess = x ? sound.processLFSR7bit : sound.processLFSR15bit;
+    },
+    bitPeriod: 1,
+    freq: function (bits4, bits3) {
+      sound[4].bitPeriod = audioCtx.sampleRate * sound.snd4bit4[bits4] * sound.snd4bit3[bits3];
+    },
+  },
 };
 sound.start();

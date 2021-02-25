@@ -1,7 +1,8 @@
 "use strict";
 class GBC_cpu {
-  constructor(core) {
+  constructor(core,mem) {
     this.core = core;
+    this.mem = mem;
     this.a = 0x01;
     this.b = 0x00;
     this.c = 0x00;
@@ -310,7 +311,7 @@ class GBC_cpu {
         : (opcode & 0x07) === 5
         ? this.l
         : (opcode & 0x07) === 6
-        ? this.core.mem_read(this.l | (this.h << 8))
+        ? this.mem.mem_read(this.l | (this.h << 8))
         : this.a;
     };
     var doing_delayed_di = false,
@@ -323,7 +324,7 @@ class GBC_cpu {
       doing_delayed_ei = true;
     }
     if (!this.halted) {
-      var opcode = this.core.mem_read(this.pc);
+      var opcode = this.mem.mem_read(this.pc);
       this.cycle_counter = 0;
       if (opcode === 0x76) this.halted = true;
       else if (opcode >= 0x40 && opcode < 0x80) {
@@ -334,7 +335,7 @@ class GBC_cpu {
         else if ((opcode & 0x38) >>> 3 === 3) this.e = operand;
         else if ((opcode & 0x38) >>> 3 === 4) this.h = operand;
         else if ((opcode & 0x38) >>> 3 === 5) this.l = operand;
-        else if ((opcode & 0x38) >>> 3 === 6) this.core.mem_write(this.l | (this.h << 8), operand);
+        else if ((opcode & 0x38) >>> 3 === 6) this.mem.mem_write(this.l | (this.h << 8), operand);
         else if ((opcode & 0x38) >>> 3 === 7) this.a = operand;
       } else if (opcode >= 0x80 && opcode < 0xc0) {
         var operand = get_operand.call(this, opcode),
@@ -395,14 +396,14 @@ class GBC_cpu {
   }
   push_word(operand) {
     this.sp = (this.sp - 1) & 0xffff;
-    this.core.mem_write(this.sp, (operand & 0xff00) >>> 8);
+    this.mem.mem_write(this.sp, (operand & 0xff00) >>> 8);
     this.sp = (this.sp - 1) & 0xffff;
-    this.core.mem_write(this.sp, operand & 0x00ff);
+    this.mem.mem_write(this.sp, operand & 0x00ff);
   }
   pop_word() {
-    var retval = this.core.mem_read(this.sp) & 0xff;
+    var retval = this.mem.mem_read(this.sp) & 0xff;
     this.sp = (this.sp + 1) & 0xffff;
-    retval |= this.core.mem_read(this.sp) << 8;
+    retval |= this.mem.mem_read(this.sp) << 8;
     this.sp = (this.sp + 1) & 0xffff;
     return retval;
   }
@@ -414,7 +415,7 @@ class GBC_cpu {
     if (condition) {
       this.cycle_counter += 1;
       this.pc =
-        this.core.mem_read((this.pc + 1) & 0xffff) | (this.core.mem_read((this.pc + 2) & 0xffff) << 8);
+        this.mem.mem_read((this.pc + 1) & 0xffff) | (this.mem.mem_read((this.pc + 2) & 0xffff) << 8);
       this.pc = (this.pc - 1) & 0xffff;
     } else {
       this.pc = (this.pc + 2) & 0xffff;
@@ -423,7 +424,7 @@ class GBC_cpu {
   do_conditional_relative_jump(condition) {
     if (condition) {
       this.cycle_counter += 1;
-      var offset = this.get_signed_displacement(this.core.mem_read((this.pc + 1) & 0xffff));
+      var offset = this.get_signed_displacement(this.mem.mem_read((this.pc + 1) & 0xffff));
       this.pc = (this.pc + offset + 1) & 0xffff;
     } else {
       this.pc = (this.pc + 1) & 0xffff;
@@ -434,7 +435,7 @@ class GBC_cpu {
       this.cycle_counter += 3;
       this.push_word((this.pc + 3) & 0xffff);
       this.pc =
-        this.core.mem_read((this.pc + 1) & 0xffff) | (this.core.mem_read((this.pc + 2) & 0xffff) << 8);
+        this.mem.mem_read((this.pc + 1) & 0xffff) | (this.mem.mem_read((this.pc + 2) & 0xffff) << 8);
       this.pc = (this.pc - 1) & 0xffff;
     } else {
       this.pc = (this.pc + 2) & 0xffff;
@@ -606,13 +607,13 @@ class GBC_cpu {
       }
       case 0x01: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.c = this.core.mem_read(this.pc);
+        this.c = this.mem.mem_read(this.pc);
         this.pc = (this.pc + 1) & 0xffff;
-        this.b = this.core.mem_read(this.pc);
+        this.b = this.mem.mem_read(this.pc);
         break;
       }
       case 0x02: {
-        this.core.mem_write(this.c | (this.b << 8), this.a);
+        this.mem.mem_write(this.c | (this.b << 8), this.a);
         break;
       }
       case 0x03: {
@@ -632,7 +633,7 @@ class GBC_cpu {
       }
       case 0x06: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.b = this.core.mem_read(this.pc);
+        this.b = this.mem.mem_read(this.pc);
         break;
       }
       case 0x07: {
@@ -642,9 +643,9 @@ class GBC_cpu {
       }
       case 0x08: {
         var address =
-          this.core.mem_read((this.pc + 1) & 0xffff) | (this.core.mem_read((this.pc + 2) & 0xffff) << 8);
-        this.core.mem_write(address, this.sp & 0xff);
-        this.core.mem_write((address + 1) & 0xffff, (this.sp & 0xff00) >>> 8);
+          this.mem.mem_read((this.pc + 1) & 0xffff) | (this.mem.mem_read((this.pc + 2) & 0xffff) << 8);
+        this.mem.mem_write(address, this.sp & 0xff);
+        this.mem.mem_write((address + 1) & 0xffff, (this.sp & 0xff00) >>> 8);
         this.pc = (this.pc + 2) & 0xffff;
         break;
       }
@@ -653,7 +654,7 @@ class GBC_cpu {
         break;
       }
       case 0x0a: {
-        this.a = this.core.mem_read(this.c | (this.b << 8));
+        this.a = this.mem.mem_read(this.c | (this.b << 8));
         break;
       }
       case 0x0b: {
@@ -673,7 +674,7 @@ class GBC_cpu {
       }
       case 0x0e: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.c = this.core.mem_read(this.pc);
+        this.c = this.mem.mem_read(this.pc);
         break;
       }
       case 0x0f: {
@@ -688,13 +689,13 @@ class GBC_cpu {
       }
       case 0x11: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.e = this.core.mem_read(this.pc);
+        this.e = this.mem.mem_read(this.pc);
         this.pc = (this.pc + 1) & 0xffff;
-        this.d = this.core.mem_read(this.pc);
+        this.d = this.mem.mem_read(this.pc);
         break;
       }
       case 0x12: {
-        this.core.mem_write(this.e | (this.d << 8), this.a);
+        this.mem.mem_write(this.e | (this.d << 8), this.a);
         break;
       }
       case 0x13: {
@@ -714,7 +715,7 @@ class GBC_cpu {
       }
       case 0x16: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.d = this.core.mem_read(this.pc);
+        this.d = this.mem.mem_read(this.pc);
         break;
       }
       case 0x17: {
@@ -723,7 +724,7 @@ class GBC_cpu {
         break;
       }
       case 0x18: {
-        var offset = this.get_signed_displacement(this.core.mem_read((this.pc + 1) & 0xffff));
+        var offset = this.get_signed_displacement(this.mem.mem_read((this.pc + 1) & 0xffff));
         this.pc = (this.pc + offset + 1) & 0xffff;
         break;
       }
@@ -732,7 +733,7 @@ class GBC_cpu {
         break;
       }
       case 0x1a: {
-        this.a = this.core.mem_read(this.e | (this.d << 8));
+        this.a = this.mem.mem_read(this.e | (this.d << 8));
         break;
       }
       case 0x1b: {
@@ -752,7 +753,7 @@ class GBC_cpu {
       }
       case 0x1e: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.e = this.core.mem_read(this.pc);
+        this.e = this.mem.mem_read(this.pc);
         break;
       }
       case 0x1f: {
@@ -766,14 +767,14 @@ class GBC_cpu {
       }
       case 0x21: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.l = this.core.mem_read(this.pc);
+        this.l = this.mem.mem_read(this.pc);
         this.pc = (this.pc + 1) & 0xffff;
-        this.h = this.core.mem_read(this.pc);
+        this.h = this.mem.mem_read(this.pc);
         break;
       }
       case 0x22: {
         var address = this.l | (this.h << 8);
-        this.core.mem_write(address, this.a);
+        this.mem.mem_write(address, this.a);
         address += 1;
         this.l = address & 0xff;
         this.h = (address & 0xff00) >>> 8;
@@ -796,7 +797,7 @@ class GBC_cpu {
       }
       case 0x26: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.h = this.core.mem_read(this.pc);
+        this.h = this.mem.mem_read(this.pc);
         break;
       }
       case 0x27: {
@@ -824,7 +825,7 @@ class GBC_cpu {
       }
       case 0x2a: {
         var address = this.l | (this.h << 8);
-        this.a = this.core.mem_read(address);
+        this.a = this.mem.mem_read(address);
         address += 1;
         this.l = address & 0xff;
         this.h = (address & 0xff00) >>> 8;
@@ -847,7 +848,7 @@ class GBC_cpu {
       }
       case 0x2e: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.l = this.core.mem_read(this.pc);
+        this.l = this.mem.mem_read(this.pc);
         break;
       }
       case 0x2f: {
@@ -862,13 +863,13 @@ class GBC_cpu {
       }
       case 0x31: {
         this.sp =
-          this.core.mem_read((this.pc + 1) & 0xffff) | (this.core.mem_read((this.pc + 2) & 0xffff) << 8);
+          this.mem.mem_read((this.pc + 1) & 0xffff) | (this.mem.mem_read((this.pc + 2) & 0xffff) << 8);
         this.pc = (this.pc + 2) & 0xffff;
         break;
       }
       case 0x32: {
         var address = this.l | (this.h << 8);
-        this.core.mem_write(address, this.a);
+        this.mem.mem_write(address, this.a);
         address -= 1;
         this.l = address & 0xff;
         this.h = (address & 0xff00) >>> 8;
@@ -880,17 +881,17 @@ class GBC_cpu {
       }
       case 0x34: {
         var address = this.l | (this.h << 8);
-        this.core.mem_write(address, this.do_inc(this.core.mem_read(address)));
+        this.mem.mem_write(address, this.do_inc(this.mem.mem_read(address)));
         break;
       }
       case 0x35: {
         var address = this.l | (this.h << 8);
-        this.core.mem_write(address, this.do_dec(this.core.mem_read(address)));
+        this.mem.mem_write(address, this.do_dec(this.mem.mem_read(address)));
         break;
       }
       case 0x36: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.core.mem_write(this.l | (this.h << 8), this.core.mem_read(this.pc));
+        this.mem.mem_write(this.l | (this.h << 8), this.mem.mem_read(this.pc));
         break;
       }
       case 0x37: {
@@ -909,7 +910,7 @@ class GBC_cpu {
       }
       case 0x3a: {
         var address = this.l | (this.h << 8);
-        this.a = this.core.mem_read(address);
+        this.a = this.mem.mem_read(address);
         address -= 1;
         this.l = address & 0xff;
         this.h = (address & 0xff00) >>> 8;
@@ -928,7 +929,7 @@ class GBC_cpu {
         break;
       }
       case 0x3e: {
-        this.a = this.core.mem_read((this.pc + 1) & 0xffff);
+        this.a = this.mem.mem_read((this.pc + 1) & 0xffff);
         this.pc = (this.pc + 1) & 0xffff;
         break;
       }
@@ -954,7 +955,7 @@ class GBC_cpu {
       }
       case 0xc3: {
         this.pc =
-          this.core.mem_read((this.pc + 1) & 0xffff) | (this.core.mem_read((this.pc + 2) & 0xffff) << 8);
+          this.mem.mem_read((this.pc + 1) & 0xffff) | (this.mem.mem_read((this.pc + 2) & 0xffff) << 8);
         this.pc = (this.pc - 1) & 0xffff;
         break;
       }
@@ -968,7 +969,7 @@ class GBC_cpu {
       }
       case 0xc6: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.do_add(this.core.mem_read(this.pc));
+        this.do_add(this.mem.mem_read(this.pc));
         break;
       }
       case 0xc7: {
@@ -989,7 +990,7 @@ class GBC_cpu {
       }
       case 0xcb: {
         this.pc = (this.pc + 1) & 0xffff;
-        var opcode = this.core.mem_read(this.pc),
+        var opcode = this.mem.mem_read(this.pc),
           bit_number = (opcode & 0x38) >>> 3,
           reg_code = opcode & 0x07;
         if (opcode < 0x40) {
@@ -1010,9 +1011,9 @@ class GBC_cpu {
           else if (reg_code === 4) this.h = inst_funcs[bit_number].call(this, this.h);
           else if (reg_code === 5) this.l = inst_funcs[bit_number].call(this, this.l);
           else if (reg_code === 6) {
-            this.core.mem_write(
+            this.mem.mem_write(
               this.l | (this.h << 8),
-              inst_funcs[bit_number].call(this, this.core.mem_read(this.l | (this.h << 8)))
+              inst_funcs[bit_number].call(this, this.mem.mem_read(this.l | (this.h << 8)))
             );
             this.cycle_counter += 2;
           } else if (reg_code === 7) this.a = inst_funcs[bit_number].call(this, this.a);
@@ -1024,7 +1025,7 @@ class GBC_cpu {
           else if (reg_code === 4) this.flags.Z = !(this.h & (1 << bit_number)) ? 1 : 0;
           else if (reg_code === 5) this.flags.Z = !(this.l & (1 << bit_number)) ? 1 : 0;
           else if (reg_code === 6) {
-            this.flags.Z = !(this.core.mem_read(this.l | (this.h << 8)) & (1 << bit_number)) ? 1 : 0;
+            this.flags.Z = !(this.mem.mem_read(this.l | (this.h << 8)) & (1 << bit_number)) ? 1 : 0;
             this.cycle_counter += 1;
           } else if (reg_code === 7) this.flags.Z = !(this.a & (1 << bit_number)) ? 1 : 0;
           this.flags.N = 0;
@@ -1037,9 +1038,9 @@ class GBC_cpu {
           else if (reg_code === 4) this.h = this.h & (0xff & ~(1 << bit_number));
           else if (reg_code === 5) this.l = this.l & (0xff & ~(1 << bit_number));
           else if (reg_code === 6) {
-            this.core.mem_write(
+            this.mem.mem_write(
               this.l | (this.h << 8),
-              this.core.mem_read(this.l | (this.h << 8)) & (0xff & ~(1 << bit_number))
+              this.mem.mem_read(this.l | (this.h << 8)) & (0xff & ~(1 << bit_number))
             );
             this.cycle_counter += 2;
           } else if (reg_code === 7) this.a = this.a & (0xff & ~(1 << bit_number));
@@ -1051,9 +1052,9 @@ class GBC_cpu {
           else if (reg_code === 4) this.h = this.h | (0xff & (1 << bit_number));
           else if (reg_code === 5) this.l = this.l | (0xff & (1 << bit_number));
           else if (reg_code === 6) {
-            this.core.mem_write(
+            this.mem.mem_write(
               this.l | (this.h << 8),
-              this.core.mem_read(this.l | (this.h << 8)) | (0xff & (1 << bit_number))
+              this.mem.mem_read(this.l | (this.h << 8)) | (0xff & (1 << bit_number))
             );
             this.cycle_counter += 2;
           } else if (reg_code === 7) this.a = this.a | (0xff & (1 << bit_number));
@@ -1068,13 +1069,13 @@ class GBC_cpu {
       case 0xcd: {
         this.push_word((this.pc + 3) & 0xffff);
         this.pc =
-          this.core.mem_read((this.pc + 1) & 0xffff) | (this.core.mem_read((this.pc + 2) & 0xffff) << 8);
+          this.mem.mem_read((this.pc + 1) & 0xffff) | (this.mem.mem_read((this.pc + 2) & 0xffff) << 8);
         this.pc = (this.pc - 1) & 0xffff;
         break;
       }
       case 0xce: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.do_adc(this.core.mem_read(this.pc));
+        this.do_adc(this.mem.mem_read(this.pc));
         break;
       }
       case 0xcf: {
@@ -1105,7 +1106,7 @@ class GBC_cpu {
       }
       case 0xd6: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.do_sub(this.core.mem_read(this.pc));
+        this.do_sub(this.mem.mem_read(this.pc));
         break;
       }
       case 0xd7: {
@@ -1131,7 +1132,7 @@ class GBC_cpu {
       }
       case 0xde: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.do_sbc(this.core.mem_read(this.pc));
+        this.do_sbc(this.mem.mem_read(this.pc));
         break;
       }
       case 0xdf: {
@@ -1140,7 +1141,7 @@ class GBC_cpu {
       }
       case 0xe0: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.core.mem_write(0xff00 | this.core.mem_read(this.pc), this.a);
+        this.mem.mem_write(0xff00 | this.mem.mem_read(this.pc), this.a);
         break;
       }
       case 0xe1: {
@@ -1150,7 +1151,7 @@ class GBC_cpu {
         break;
       }
       case 0xe2: {
-        this.core.mem_write(0xff00 | this.c, this.a);
+        this.mem.mem_write(0xff00 | this.c, this.a);
         break;
       }
       case 0xe5: {
@@ -1159,7 +1160,7 @@ class GBC_cpu {
       }
       case 0xe6: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.do_and(this.core.mem_read(this.pc));
+        this.do_and(this.mem.mem_read(this.pc));
         break;
       }
       case 0xe7: {
@@ -1168,7 +1169,7 @@ class GBC_cpu {
       }
       case 0xe8: {
         this.pc = (this.pc + 1) & 0xffff;
-        var operand = this.get_signed_displacement(this.core.mem_read(this.pc)),
+        var operand = this.get_signed_displacement(this.mem.mem_read(this.pc)),
           result = (this.sp + operand) & 0xffff;
         this.flags.C = (result & 0xff) < (this.sp & 0xff) ? 1 : 0;
         this.flags.H = (result & 0xf) < (this.sp & 0xf) ? 1 : 0;
@@ -1183,8 +1184,8 @@ class GBC_cpu {
         break;
       }
       case 0xea: {
-        this.core.mem_write(
-          this.core.mem_read((this.pc + 1) & 0xffff) | (this.core.mem_read((this.pc + 2) & 0xffff) << 8),
+        this.mem.mem_write(
+          this.mem.mem_read((this.pc + 1) & 0xffff) | (this.mem.mem_read((this.pc + 2) & 0xffff) << 8),
           this.a
         );
         this.pc = (this.pc + 2) & 0xffff;
@@ -1192,7 +1193,7 @@ class GBC_cpu {
       }
       case 0xee: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.do_xor(this.core.mem_read(this.pc));
+        this.do_xor(this.mem.mem_read(this.pc));
         break;
       }
       case 0xef: {
@@ -1201,7 +1202,7 @@ class GBC_cpu {
       }
       case 0xf0: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.a = this.core.mem_read(0xff00 | this.core.mem_read(this.pc));
+        this.a = this.mem.mem_read(0xff00 | this.mem.mem_read(this.pc));
         break;
       }
       case 0xf1: {
@@ -1211,7 +1212,7 @@ class GBC_cpu {
         break;
       }
       case 0xf2: {
-        this.a = this.core.mem_read(0xff00 | this.c);
+        this.a = this.mem.mem_read(0xff00 | this.c);
         break;
       }
       case 0xf3: {
@@ -1224,7 +1225,7 @@ class GBC_cpu {
       }
       case 0xf6: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.do_or(this.core.mem_read(this.pc));
+        this.do_or(this.mem.mem_read(this.pc));
         break;
       }
       case 0xf7: {
@@ -1233,7 +1234,7 @@ class GBC_cpu {
       }
       case 0xf8: {
         this.pc = (this.pc + 1) & 0xffff;
-        var operand = this.get_signed_displacement(this.core.mem_read(this.pc)),
+        var operand = this.get_signed_displacement(this.mem.mem_read(this.pc)),
           result = this.sp + operand;
         this.l = result & 0xff;
         this.h = (result & 0xff00) >>> 8;
@@ -1248,8 +1249,8 @@ class GBC_cpu {
         break;
       }
       case 0xfa: {
-        this.a = this.core.mem_read(
-          this.core.mem_read((this.pc + 1) & 0xffff) | (this.core.mem_read((this.pc + 2) & 0xffff) << 8)
+        this.a = this.mem.mem_read(
+          this.mem.mem_read((this.pc + 1) & 0xffff) | (this.mem.mem_read((this.pc + 2) & 0xffff) << 8)
         );
         this.pc = (this.pc + 2) & 0xffff;
         break;
@@ -1260,7 +1261,7 @@ class GBC_cpu {
       }
       case 0xfe: {
         this.pc = (this.pc + 1) & 0xffff;
-        this.do_cp(this.core.mem_read(this.pc));
+        this.do_cp(this.mem.mem_read(this.pc));
         break;
       }
       case 0xff: {
