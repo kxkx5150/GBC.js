@@ -253,6 +253,7 @@ class GBC_memory {
   }
   mem_read(address) {
     address &= 0xffff;
+
     if (address === 0xffff) return this.core.interrupt_enable;
     else if (address === 0xff0f) return this.core.interrupt_flags;
     else if (address === 0xff46) return 0;
@@ -300,7 +301,9 @@ class GBC_memory {
       return this.core.video.mem_read(address);
     } else if (address >= 0xff04 && address <= 0xff07) {
       return this.core.timer.reg_read(address);
-    } else if (address >= 0xff10 && address <= 0xff3f) {
+    } else if (address >= 0xff10 && address <= 0xff26) {
+      return this.core.sound.readMem(address);
+    } else if (address >= 0xff30 && address <= 0xff3f) {
       return this.core.sound.readMem(address);
     } else if (address >= 0xff40 && address <= 0xff4b) {
       return this.core.video.mem_read(address);
@@ -314,7 +317,6 @@ class GBC_memory {
   mem_write(address, value) {
     address &= 0xffff;
     value &= 0xff;
-
     if (address === 0xffff) this.core.interrupt_enable = value;
     else if (address === 0xff00) this.core.keypad_nibble_requested = (value >>> 5) % 2;
     else if (address === 0xff0f) this.core.interrupt_flags = value;
@@ -335,8 +337,8 @@ class GBC_memory {
       if (
         this.core.vram_dma_source > 0xdff0 ||
         (this.core.vram_dma_source > 0x7ff0 && this.core.vram_dma_source < 0xa000)
-      )
-        return;
+      )return;
+
       var length = ((value & 0x7f) + 1) * 16;
       this.core.video.do_vram_dma(
         this.get_dma_array(this.core.vram_dma_source, length),
@@ -362,8 +364,11 @@ class GBC_memory {
       this.core.video.mem_write(address, value);
     } else if (address >= 0xff04 && address <= 0xff07) {
       this.core.timer.reg_write(address, value);
-    } else if (address >= 0xff10 && address <= 0xff3f) {
+    } else if (address >= 0xff10 && address <= 0xff26) {
       this.core.sound.soundMapper(address, value);
+    } else if (address >= 0xff30 && address <= 0xff3f) {
+      this.core.sound.nodes[3].waveChanged = true;
+      this.core.sound.MEM2[address] = value;
     } else if (address >= 0xff40 && address <= 0xff4b) {
       this.core.video.mem_write(address, value);
     } else if (address >= 0xff68 && address <= 0xff6b) {
@@ -377,7 +382,7 @@ class GBC_memory {
     for (var i = 0; i < length; ++i) new_array[i] = this.mem_read(start_address + i);
     return new_array;
   }
-  reset(){
+  reset() {
     this.zero_page = new Uint8Array(0x7f);
   }
 }

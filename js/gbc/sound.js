@@ -292,7 +292,7 @@ class GBC_sound {
     this.MEM2[0xff22] = 0x00;
     this.MEM2[0xff23] = 0xbf;
     this.MEM2[0xff24] = 0x77;
-    this.MEM2[0xff25] = 0xf3;
+    this.soundMapper(0xff25, 0xf3)
     this.MEM2[0xff26] = 0xf1;
   }
   readMem(addr) {
@@ -503,26 +503,14 @@ class GBC_sound {
         var dis = (this.MEM2[0xff25] ^ data) & ~data;
         for (var i = 0; i < 4; i++) {
           if (con & (1 << i)) this.nodes[i + 1].gainNode.connect(this.SO1);
-          if (dis & (1 << i)) {
-            try {
-              this.nodes[i + 1].gainNode.disconnect(this.SO1);
-            } catch (error) {
-              // console.log(this.nodes[i + 1].gainNode);
-            }
-          }
+          if (dis & (1 << i)) this.nodes[i + 1].gainNode.disconnect(this.SO1);
           if (con & (1 << (4 + i))) this.nodes[i + 1].gainNode.connect(this.SO2);
-          if (dis & (1 << (4 + i))) {
-            try {
-              this.nodes[i + 1].gainNode.disconnect(this.SO2);
-            } catch (error) {
-              // console.log(this.nodes[i + 1].gainNode);
-            }
-          }
+          if (dis & (1 << (4 + i))) this.nodes[i + 1].gainNode.disconnect(this.SO2);
         }
         this.MEM2[addr] = data;
         return;
       }
       return;
-    } else if (addr >= 0xff30 && addr <= 0xff3f) this.nodes[3].waveChanged = true;
+    }
   }
 }

@@ -27,7 +27,6 @@ class GBC_emulator_core {
     this.timer = new GBC_timer(this);
     this.sound = new GBC_sound(this);
     this.gamepad = new GBC_gamepad(this);
-
   }
   startTimer(){
     cancelAnimationFrame(this.timerID)
@@ -67,7 +66,7 @@ class GBC_emulator_core {
     this.mem.reset();
     this.cpu.reset();
     this.timer.reset();
-    this.sound.reset();
+    // this.sound.reset();
   }
   pause() {
     this.paused = true;
