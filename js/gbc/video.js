@@ -13,7 +13,8 @@ class GBC_video {
   init(is_cgb) {
     var canvas_element = document.getElementById("output");
     this.drawing_context = canvas_element.getContext("2d");
-    this.image_data = this.drawing_context.getImageData(0, 0, canvas_element.width, canvas_element.height);
+    this.image_data = this.drawing_context.createImageData(canvas_element.width, canvas_element.height);
+    this.framebuffer_u32 = new Uint32Array(this.image_data.data.buffer);
     this.is_cgb = is_cgb;
     var vram_length = this.is_cgb ? 0x4000 : 0x2000;
     this.vram = new Uint8Array(vram_length);
@@ -346,10 +347,11 @@ class GBC_video {
         }
       }
     }
+    let fb32 = this.framebuffer_u32;
     for (current_x = 0; current_x < 160; ++current_x) {
-      this.put_pixel(current_x, this.current_line, background_buffer[current_x]);
+      this.put_pixel(fb32,current_x, this.current_line, background_buffer[current_x]);
       if (sprite_buffer[current_x]) {
-        this.put_pixel(current_x, this.current_line, sprite_buffer[current_x]);
+        this.put_pixel(fb32,current_x, this.current_line, sprite_buffer[current_x]);
       }
     }
   }
@@ -384,15 +386,13 @@ class GBC_video {
     this.drawing_context.putImageData(this.image_data, 0, 0);
   }
   clear_display() {
+    let fb32 = this.framebuffer_u32;
     for (var y = 0; y < 144; ++y)
       for (var x = 0; x < 160; ++x)
-        this.put_pixel(x, y, this.is_cgb ? { r: 255, g: 255, b: 255 } : this.palette[0]);
+        this.put_pixel(fb32,x, y, this.is_cgb ? { r: 255, g: 255, b: 255 } : this.palette[0]);
   }
-  put_pixel(x, y, color) {
-    this.image_data.data[(y * this.image_data.width + x) * 4] = color.r;
-    this.image_data.data[(y * this.image_data.width + x) * 4 + 1] = color.g;
-    this.image_data.data[(y * this.image_data.width + x) * 4 + 2] = color.b;
-    this.image_data.data[(y * this.image_data.width + x) * 4 + 3] = 255;
+  put_pixel(fb32,x, y, color) {
+    fb32[(y * this.image_data.width + x)] = (255 << 24) | (color.b << 16) | (color.g << 8) | color.r;
   }
   get_color_from_cgb_bkg_palette(palette, color) {
     var color_word = this.cgb_bkg_palettes[palette * 8 + color * 2] |

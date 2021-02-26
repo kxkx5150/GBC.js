@@ -45,7 +45,6 @@ class GBC_timer {
     }
   }
   reset(){
-    this.core = core;
     this.div_ticks = 0;
     this.tima_ticks = 0;
     this.div_reg = 0;

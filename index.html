@@ -13,31 +13,47 @@
     <div class="ctrl_div">
       <div id="input-group">
         <label class="github"
-          ><a href="https://github.com/kxkx5150/GBC.js"
-            >https://github.com/kxkx5150/GBC.js</a
-          ></label
+          ><a href="https://github.com/kxkx5150/GBC.js">https://github.com/kxkx5150/GBC.js</a></label
         >
-        <span id="gamepad_info"></span><img src="./img/options.png" id="setteings"  style="display: none"/>
+        <span id="gamepad_info"></span><img src="./img/options.png" id="setteings" />
         <input type="file" name="file" id="fileInput" class="inputfile" />
         <label for="fileInput" class="button">Choose a file</label>
-        <input type="range" id="speed" name="speed" min="1" max="7" step="1" value="4" style="display: none" />
-        <label for="speed" style="padding-right: 18px;display: none">Speed</label>
+
+        <label for="zoom_select" style="color: orange;"> Zoom </label>
+        <select id="zoom_select">
+          <option value="1">x1</option>
+          <option value="2">x2</option>
+          <option value="3">x3</option>
+          <option value="4">Full</option>
+        </select>
+        <input
+          type="range"
+          id="speed"
+          name="speed"
+          min="1"
+          max="7"
+          step="1"
+          value="4"
+          style="display: none"
+        />
+        <label for="speed" style="padding-right: 18px; display: none">Speed</label>
         <button id="pauseButton" class="button" style="display: none">Pause/Play</button>
         <button id="resetButton" class="button" style="display: none">Reset</button>
         <button id="saveButton" class="button" style="display: none">Save</button>
         <button id="loadButton" class="button" style="display: none">Load</button>
       </div>
     </div>
-    <div class="gameboy">
+    <div id="full_container"></div>
+    <div class="gameboy" id="gameboy_container">
       <div class="screen-cont">
         <div class="power"></div>
-        <div class="screen">
+        <div class="screen" id="screen_container">
           <!--
             Copyright (c) 安東　邦泰
             Kunihiro Ando
             Released under the MIT license
             http://opensource.org/licenses/mit-license.php
-        -->
+          -->
           <canvas id="output" width="160" height="144"> </canvas>
         </div>
       </div>
@@ -53,11 +69,52 @@
       <div class="on-off">< off-on ></div>
       <div class="phones">phones</div>
     </div>
+    <div id="settingdiv" style="display: none" class="warpdiv">
+      <div id="setting_container" class="warpcontainer" style="text-align: center">
+        <h3 class="lbl">Settings</h3>
+        <div>
+          <div class="keyhelp">
+            <label>START :</label> Enter<br />
+            <label>SELRCT :</label> Shift<br />
+            <label>A :</label> A<br />
+            <label>B :</label> Z<br />
+          </div>
+        </div>
+        <h3 class="lbl">Gamepad</h3>
+        <div style="font-size: 18px; color: crimson">Please set rom !</div>
+        <div id="gamepad_cont">
+          <div id="gamepad_name">Controller disconnected</div>
+          <div id="gamepad_presse_button">press button :</div>
+          <div class="keyhelp" id="gamepad_button_container">
+            <div class="button_div">
+              <label>START :</label
+              ><select id="start_button"></select>
+            </div>
+            <div class="button_div">
+              <label>SELRCT :</label
+              ><select id="select_button"></select
+              ><br />
+            </div>
+            <div class="button_div">
+              <label>A :</label
+              ><select id="a_button"></select
+              ><br />
+            </div>
+            <div class="button_div">
+              <label>B :</label
+              ><select id="b_button"></select
+              ><br />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="./js/gbc/mem.js"></script>
     <script src="./js/gbc/cpu.js"></script>
     <script src="./js/gbc/video.js"></script>
     <script src="./js/gbc/timer.js"></script>
     <script src="./js/gbc/sound.js"></script>
+    <script src="./js/gbc/gamepad.js"></script>
     <script src="./js/gbc/gbc.js"></script>
     <script src="./js/index.js"></script>
   </body>

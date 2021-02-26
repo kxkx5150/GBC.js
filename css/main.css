@@ -16,6 +16,10 @@ body {
   padding: 0;
   font-size: 13px;
   font-family: arial, sans-serif;
+  scrollbar-width: none; 
+}
+body::-webkit-scrollbar{
+  display:none;
 }
 input.btn-on,
 input.btn-off {
@@ -29,6 +33,11 @@ input.btn-hide {
 }
 button:focus {
   outline: 0;
+}
+#full_container{
+  text-align: center;
+  background: #191919;
+  width: 100%;
 }
 .button {
   padding: 2px 4px;
@@ -102,6 +111,9 @@ button:focus {
   padding: 18px 4px 8px 4px;
   color: deeppink;
 }
+#zoom_select{
+  font-size: 15px;
+}
 .keyhelp label {
   width: 200px;
   display: inline-block;
@@ -146,6 +158,7 @@ button:focus {
   background: #eee;
   border-radius: 10px 10px 60px 10px;
   box-shadow: 5px 5px rgba(0,0,0,0.1);
+  transform-origin: top;
 }
 .gameboy:before {
   content: "";

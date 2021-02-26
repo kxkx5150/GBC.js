@@ -26,6 +26,8 @@ class GBC_emulator_core {
     this.video = new GBC_video(this);
     this.timer = new GBC_timer(this);
     this.sound = new GBC_sound(this);
+    this.gamepad = new GBC_gamepad(this);
+
   }
   startTimer(){
     cancelAnimationFrame(this.timerID)
@@ -40,6 +42,7 @@ class GBC_emulator_core {
   cycle() {
     var cycle_counter = 0,
       cycles_per_frame = this.cpu_speed ? 17556 * 2 : 17556;
+    this.gamepad.updateGamepad();
     while (cycle_counter <= cycles_per_frame) {
       var new_cycles = this.cpu.run_instruction();
       this.sound.countDown(new_cycles);
