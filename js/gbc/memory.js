@@ -224,7 +224,6 @@ class GBC_memory {
         }
       }
     }
-    this.core.run();
   }
   detect_local_storage() {
     try {
@@ -377,5 +376,8 @@ class GBC_memory {
     var new_array = new Uint8Array(length);
     for (var i = 0; i < length; ++i) new_array[i] = this.mem_read(start_address + i);
     return new_array;
+  }
+  reset(){
+    this.zero_page = new Uint8Array(0x7f);
   }
 }

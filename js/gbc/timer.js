@@ -44,4 +44,14 @@ class GBC_timer {
       this.timer_speed = value & 0x03;
     }
   }
+  reset(){
+    this.core = core;
+    this.div_ticks = 0;
+    this.tima_ticks = 0;
+    this.div_reg = 0;
+    this.tima_reg = 0;
+    this.modulo_reg = 0;
+    this.timer_speed = 0;
+    this.timer_running = 0;
+  }
 }

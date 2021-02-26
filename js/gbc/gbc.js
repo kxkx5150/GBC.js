@@ -1,11 +1,6 @@
 "use strict";
 class GBC_emulator_core {
   constructor() {
-    this.memory = new GBC_memory(this);
-    this.cpu = new GBC_cpu(this, this.memory);
-    this.video = new GBC_video(this);
-    this.timer = new GBC_timer(this);
-    this.sound = sound;
     this.paused = false;
     this.interrupt_enable = 0;
     this.interrupt_flags = 0;
@@ -14,6 +9,7 @@ class GBC_emulator_core {
     this.vram_dma_running = 0;
     this.speed_switch_unlocked = 0;
     this.cpu_speed = 0;
+    this.timerID = null;
     this.keypad_nibble_requested = 0;
     this.buttons = {
       a: false,
@@ -25,26 +21,50 @@ class GBC_emulator_core {
       left: false,
       right: false,
     };
+    this.mem = new GBC_memory(this);
+    this.cpu = new GBC_cpu(this, this.mem);
+    this.video = new GBC_video(this);
+    this.timer = new GBC_timer(this);
+    this.sound = new GBC_sound(this);
+  }
+  startTimer(){
+    cancelAnimationFrame(this.timerID)
+    this.timerID = requestAnimationFrame(this.cycle.bind(this));
+  }
+  run() {
+    this.cpu.reset(this.mem.cgb_game);
+    this.video.init(this.mem.cgb_game);
+    this.paused = false;
+    this.startTimer();
   }
   cycle() {
     var cycle_counter = 0,
       cycles_per_frame = this.cpu_speed ? 17556 * 2 : 17556;
     while (cycle_counter <= cycles_per_frame) {
       var new_cycles = this.cpu.run_instruction();
-      sound.countDown(new_cycles);
+      this.sound.countDown(new_cycles);
       new_cycles += this.video.clock(new_cycles * (this.cpu_speed ? 0.5 : 1)) * (this.cpu_speed ? 2 : 1);
       this.timer.clock(new_cycles);
       cycle_counter += new_cycles;
     }
     if (!this.paused) {
-      window.requestAnimationFrame(this.cycle.bind(this));
+      this.startTimer();
     }
   }
-  run() {
-    this.cpu.reset(this.memory.cgb_game);
-    this.video.init(this.memory.cgb_game);
-    this.paused = false;
-    window.requestAnimationFrame(this.cycle.bind(this));
+  reset(){
+    cancelAnimationFrame(this.timerID)
+    this.interrupt_enable = 0;
+    this.interrupt_flags = 0;
+    this.vram_dma_source = 0;
+    this.vram_dma_destination = 0;
+    this.vram_dma_running = 0;
+    this.speed_switch_unlocked = 0;
+    this.cpu_speed = 0;
+    this.keypad_nibble_requested = 0;
+    this.mem.reset();
+    this.cpu.reset();
+    this.timer.reset();
+    this.sound.reset();
   }
   pause() {
     this.paused = true;
@@ -52,15 +72,16 @@ class GBC_emulator_core {
   resume() {
     if (this.paused) {
       this.paused = false;
-      window.requestAnimationFrame(this.cycle.bind(this));
+      this.startTimer();
     }
   }
   set_rom(rom, filename) {
     this.paused = true;
-    this.memory.load_rom(new Uint8Array(rom), filename);
+    this.mem.load_rom(new Uint8Array(rom), filename);
     this.interrupt_enable = 0;
     this.interrupt_flags = 0;
     this.timer_running = 1;
+    this.run();
   }
   hit_stop_instruction() {
     if (this.speed_switch_unlocked)

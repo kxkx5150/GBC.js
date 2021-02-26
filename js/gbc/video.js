@@ -351,6 +351,65 @@ class GBC_video {
       }
     }
   }
+  do_oam_dma(operand) {
+    if (typeof operand === "number") {
+      this.sprite_ram = new Uint8Array(this.vram.subarray(operand, operand + 160));
+    } else {
+      this.sprite_ram = operand;
+    }
+  }
+  do_vram_dma(data, destination, type) {
+    if (this.is_cgb) {
+      if (type) {
+        this.dma_running = 1;
+        this.dma_data = data;
+        this.dma_destination = destination;
+        this.dma_bytes_done = 0;
+        this.dma_length_left = data.length;
+      } else {
+        if (this.dma_running) {
+          this.dma_running = 0;
+        } else {
+          this.vram.set(data, destination + this.vram_bank * 0x2000);
+          this.dma_cycles_used = (data.length / 0x10) * 2;
+          this.dma_running = 0;
+          this.dma_length_left = 0x800;
+        }
+      }
+    }
+  }
+  update_display() {
+    this.drawing_context.putImageData(this.image_data, 0, 0);
+  }
+  clear_display() {
+    for (var y = 0; y < 144; ++y)
+      for (var x = 0; x < 160; ++x)
+        this.put_pixel(x, y, this.is_cgb ? { r: 255, g: 255, b: 255 } : this.palette[0]);
+  }
+  put_pixel(x, y, color) {
+    this.image_data.data[(y * this.image_data.width + x) * 4] = color.r;
+    this.image_data.data[(y * this.image_data.width + x) * 4 + 1] = color.g;
+    this.image_data.data[(y * this.image_data.width + x) * 4 + 2] = color.b;
+    this.image_data.data[(y * this.image_data.width + x) * 4 + 3] = 255;
+  }
+  get_color_from_cgb_bkg_palette(palette, color) {
+    var color_word = this.cgb_bkg_palettes[palette * 8 + color * 2] |
+      (this.cgb_bkg_palettes[palette * 8 + color * 2 + 1] << 8);
+    return {
+      r: (color_word & 0x1f) << 3,
+      g: ((color_word >>> 5) & 0x1f) << 3,
+      b: ((color_word >>> 10) & 0x1f) << 3,
+    };
+  }
+  get_color_from_cgb_spr_palette(palette, color) {
+    var color_word = this.cgb_spr_palettes[palette * 8 + color * 2] |
+      (this.cgb_spr_palettes[palette * 8 + color * 2 + 1] << 8);
+    return {
+      r: (color_word & 0x1f) << 3,
+      g: ((color_word >>> 5) & 0x1f) << 3,
+      b: ((color_word >>> 10) & 0x1f) << 3,
+    };
+  }
   mem_read(address) {
     if (address >= 0xff00)
       return this.reg_read(address);
@@ -497,65 +556,6 @@ class GBC_video {
       if (this.spr_palette_auto_inc)
         this.spr_palette_index = (this.spr_palette_index + 1) & 0x3f;
     }
-  }
-  do_oam_dma(operand) {
-    if (typeof operand === "number") {
-      this.sprite_ram = new Uint8Array(this.vram.subarray(operand, operand + 160));
-    } else {
-      this.sprite_ram = operand;
-    }
-  }
-  do_vram_dma(data, destination, type) {
-    if (this.is_cgb) {
-      if (type) {
-        this.dma_running = 1;
-        this.dma_data = data;
-        this.dma_destination = destination;
-        this.dma_bytes_done = 0;
-        this.dma_length_left = data.length;
-      } else {
-        if (this.dma_running) {
-          this.dma_running = 0;
-        } else {
-          this.vram.set(data, destination + this.vram_bank * 0x2000);
-          this.dma_cycles_used = (data.length / 0x10) * 2;
-          this.dma_running = 0;
-          this.dma_length_left = 0x800;
-        }
-      }
-    }
-  }
-  update_display() {
-    this.drawing_context.putImageData(this.image_data, 0, 0);
-  }
-  clear_display() {
-    for (var y = 0; y < 144; ++y)
-      for (var x = 0; x < 160; ++x)
-        this.put_pixel(x, y, this.is_cgb ? { r: 255, g: 255, b: 255 } : this.palette[0]);
-  }
-  put_pixel(x, y, color) {
-    this.image_data.data[(y * this.image_data.width + x) * 4] = color.r;
-    this.image_data.data[(y * this.image_data.width + x) * 4 + 1] = color.g;
-    this.image_data.data[(y * this.image_data.width + x) * 4 + 2] = color.b;
-    this.image_data.data[(y * this.image_data.width + x) * 4 + 3] = 255;
-  }
-  get_color_from_cgb_bkg_palette(palette, color) {
-    var color_word = this.cgb_bkg_palettes[palette * 8 + color * 2] |
-      (this.cgb_bkg_palettes[palette * 8 + color * 2 + 1] << 8);
-    return {
-      r: (color_word & 0x1f) << 3,
-      g: ((color_word >>> 5) & 0x1f) << 3,
-      b: ((color_word >>> 10) & 0x1f) << 3,
-    };
-  }
-  get_color_from_cgb_spr_palette(palette, color) {
-    var color_word = this.cgb_spr_palettes[palette * 8 + color * 2] |
-      (this.cgb_spr_palettes[palette * 8 + color * 2 + 1] << 8);
-    return {
-      r: (color_word & 0x1f) << 3,
-      g: ((color_word >>> 5) & 0x1f) << 3,
-      b: ((color_word >>> 10) & 0x1f) << 3,
-    };
   }
 }
 
