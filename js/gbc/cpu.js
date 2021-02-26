@@ -355,6 +355,10 @@ class GBC_cpu {
       }
       this.pc = (this.pc + 1) & 0xffff;
       this.cycle_counter += this.cycle_counts[opcode];
+
+      
+
+
     }
     if (this.halted && this.core.interrupt_flags & 0x1f) {
       this.halted = false;

@@ -1,12 +1,27 @@
-var core = new GBC_emulator_core();
+var gbc = new GBC_emulator_core();
 
-document.getElementById("file_input").addEventListener("change", (e) => {
+document.getElementById("fileInput").addEventListener("change", (e) => {
   load_image(e.target.files[0]);
 });
 function load_image(file) {
+  if(!file)return
   var reader = new FileReader();
   reader.onload = function () {
-    core.set_rom(reader.result, file.name);
+    gbc.set_rom(reader.result, file.name);
   };
   reader.readAsArrayBuffer(file);
 }
+window.addEventListener(
+  "keydown",
+  (e) => {
+    gbc.key_down(e);
+  },
+  true
+);
+window.addEventListener(
+  "keyup",
+  (e) => {
+    gbc.key_up(e);
+  },
+  true
+);

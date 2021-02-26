@@ -1,47 +1,64 @@
-<head>
-  <title>GBC.js</title>
-  <meta charset="utf-8" />
-  <meta name="description" content="Gameboy css only" />
-  <meta charset="UTF-8" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Cache-Control" content="no-cache" />
-  <meta name="author" content="Kunihiro Ando" />
-  <link rel="stylesheet" href="./css/main.css" />
-</head>
-<body>
-  <div>
-    <input type="file" id="file_input" />
-  </div>
-  <div class="gameboy">
-    <div class="screen-cont">
-      <div class="power"></div>
-      <div class="screen">
-        <!--
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GBC.js</title>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Gameboy css only" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Cache-Control" content="no-cache" />
+    <meta name="author" content="Kunihiro Ando" />
+    <link rel="stylesheet" href="./css/main.css" />
+  </head>
+  <body>
+    <div class="ctrl_div">
+      <div id="input-group">
+        <label class="github"
+          ><a href="https://github.com/kxkx5150/GBC.js"
+            >https://github.com/kxkx5150/GBC.js</a
+          ></label
+        >
+        <span id="gamepad_info"></span><img src="./img/options.png" id="setteings"  style="display: none"/>
+        <input type="file" name="file" id="fileInput" class="inputfile" />
+        <label for="fileInput" class="button">Choose a file</label>
+        <input type="range" id="speed" name="speed" min="1" max="7" step="1" value="4" style="display: none" />
+        <label for="speed" style="padding-right: 18px;display: none">Speed</label>
+        <button id="pauseButton" class="button" style="display: none">Pause/Play</button>
+        <button id="resetButton" class="button" style="display: none">Reset</button>
+        <button id="saveButton" class="button" style="display: none">Save</button>
+        <button id="loadButton" class="button" style="display: none">Load</button>
+      </div>
+    </div>
+    <div class="gameboy">
+      <div class="screen-cont">
+        <div class="power"></div>
+        <div class="screen">
+          <!--
             Copyright (c) 安東　邦泰
             Kunihiro Ando
             Released under the MIT license
             http://opensource.org/licenses/mit-license.php
         -->
-        <canvas id="output" width="160" height="144"> </canvas>
+          <canvas id="output" width="160" height="144"> </canvas>
+        </div>
       </div>
-    </div>
-    <div class="controls-cont">
-      <div class="btn-direction">
-        <div class="vertical"></div>
-        <div class="horizontal"></div>
+      <div class="controls-cont">
+        <div class="btn-direction">
+          <div class="vertical"></div>
+          <div class="horizontal"></div>
+        </div>
+        <div class="btn-AB"></div>
+        <div class="btn-start-select"></div>
       </div>
-      <div class="btn-AB"></div>
-      <div class="btn-start-select"></div>
+      <div class="speakers"></div>
+      <div class="on-off">< off-on ></div>
+      <div class="phones">phones</div>
     </div>
-    <div class="speakers"></div>
-    <div class="on-off">< off-on ></div>
-    <div class="phones">phones</div>
-  </div>
-  <script src="./js/gbc/memory.js"></script>
-  <script src="./js/gbc/cpu.js"></script>
-  <script src="./js/gbc/video.js"></script>
-  <script src="./js/gbc/timer.js"></script>
-  <script src="./js/gbc/sound.js"></script>
-  <script src="./js/gbc/gbc.js"></script>
-  <script src="./js/index.js"></script>
-</body>
+    <script src="./js/gbc/mem.js"></script>
+    <script src="./js/gbc/cpu.js"></script>
+    <script src="./js/gbc/video.js"></script>
+    <script src="./js/gbc/timer.js"></script>
+    <script src="./js/gbc/sound.js"></script>
+    <script src="./js/gbc/gbc.js"></script>
+    <script src="./js/index.js"></script>
+  </body>
+</html>

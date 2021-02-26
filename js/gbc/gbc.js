@@ -101,13 +101,13 @@ class GBC_emulator_core {
   }
   key_down(event) {
     var handled_key = true;
-    if (event.keyCode === 88)
+    if (event.keyCode === 65)
       this.buttons.a = true;
     else if (event.keyCode === 90)
       this.buttons.b = true;
-    else if (event.keyCode === 65)
+    else if (event.keyCode === 16)
       this.buttons.select = true;
-    else if (event.keyCode === 83)
+    else if (event.keyCode === 13)
       this.buttons.start = true;
     else if (event.keyCode === 38)
       this.buttons.up = true;
@@ -123,13 +123,13 @@ class GBC_emulator_core {
       this.raise_interrupt(0x60);
   }
   key_up(event) {
-    if (event.keyCode === 88)
+    if (event.keyCode === 65)
       this.buttons.a = false;
     else if (event.keyCode === 90)
       this.buttons.b = false;
-    else if (event.keyCode === 65)
+    else if (event.keyCode === 16)
       this.buttons.select = false;
-    else if (event.keyCode === 83)
+    else if (event.keyCode === 13)
       this.buttons.start = false;
     else if (event.keyCode === 38)
       this.buttons.up = false;

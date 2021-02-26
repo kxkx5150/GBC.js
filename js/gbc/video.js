@@ -47,6 +47,7 @@ class GBC_video {
     this.dma_running = 0;
     this.dma_length_left = 0;
     this.dma_destination = 0;
+    this.dma_cycles_used = 0;
     this.dma_data = [];
     this.did_lcd_interrupt = false;
     this.rendering_enabled = 1;
@@ -78,6 +79,7 @@ class GBC_video {
       return 0;
     }
     this.cycle_counter += cycles;
+
     if (this.cycle_counter >= 114) {
       this.cycle_counter -= 114;
       this.current_line = (this.current_line + 1) % 154;
