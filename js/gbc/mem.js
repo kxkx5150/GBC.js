@@ -267,20 +267,22 @@ class GBC_memory {
     else if (address === 0xff54 && this.cgb_game && !this.core.vram_dma_running)
       return this.core.vram_dma_destination & 0xff;
     else if (address === 0xff00) {
-      if (this.core.keypad_nibble_requested === 0) {
+      if (this.core.keypad_nibble_requested & 0x10) {
         return (
           (this.core.buttons.a ? 0 : 1) |
           (this.core.buttons.b ? 0 : 2) |
           (this.core.buttons.select ? 0 : 4) |
           (this.core.buttons.start ? 0 : 8)
         );
-      } else {
+      } else if (this.core.keypad_nibble_requested & 0x20) {
         return (
           (this.core.buttons.right ? 0 : 1) |
           (this.core.buttons.left ? 0 : 2) |
           (this.core.buttons.up ? 0 : 4) |
           (this.core.buttons.down ? 0 : 8)
         );
+      } else {
+        return 0xFF;
       }
     } else if (address === 0xff70) {
       return this.wram_bank;
@@ -318,7 +320,7 @@ class GBC_memory {
     address &= 0xffff;
     value &= 0xff;
     if (address === 0xffff) this.core.interrupt_enable = value;
-    else if (address === 0xff00) this.core.keypad_nibble_requested = (value >>> 5) % 2;
+    else if (address === 0xff00) this.core.keypad_nibble_requested = value;
     else if (address === 0xff0f) this.core.interrupt_flags = value;
     else if (address === 0xff46) {
       var start_address = value << 8;
@@ -337,7 +339,8 @@ class GBC_memory {
       if (
         this.core.vram_dma_source > 0xdff0 ||
         (this.core.vram_dma_source > 0x7ff0 && this.core.vram_dma_source < 0xa000)
-      )return;
+      )
+        return;
 
       var length = ((value & 0x7f) + 1) * 16;
       this.core.video.do_vram_dma(

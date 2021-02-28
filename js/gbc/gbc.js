@@ -28,8 +28,8 @@ class GBC_emulator_core {
     this.sound = new GBC_sound(this);
     this.gamepad = new GBC_gamepad(this);
   }
-  startTimer(){
-    cancelAnimationFrame(this.timerID)
+  startTimer() {
+    cancelAnimationFrame(this.timerID);
     this.timerID = requestAnimationFrame(this.cycle.bind(this));
   }
   run() {
@@ -53,8 +53,8 @@ class GBC_emulator_core {
       this.startTimer();
     }
   }
-  reset(){
-    cancelAnimationFrame(this.timerID)
+  reset() {
+    cancelAnimationFrame(this.timerID);
     this.interrupt_enable = 0;
     this.interrupt_flags = 0;
     this.vram_dma_source = 0;
@@ -86,61 +86,40 @@ class GBC_emulator_core {
     this.run();
   }
   hit_stop_instruction() {
-    if (this.speed_switch_unlocked)
-      this.cpu_speed = this.cpu_speed ? 0 : 1;
+    if (this.speed_switch_unlocked) this.cpu_speed = this.cpu_speed ? 0 : 1;
   }
   raise_interrupt(address) {
-    if (address === 0x40)
-      this.interrupt_flags |= 0x01;
-    else if (address === 0x48)
-      this.interrupt_flags |= 0x02;
-    else if (address === 0x50)
-      this.interrupt_flags |= 0x04;
-    else if (address === 0x58)
-      this.interrupt_flags |= 0x08;
-    else if (address === 0x60)
-      this.interrupt_flags |= 0x10;
+    if (address === 0x40) this.interrupt_flags |= 0x01;
+    else if (address === 0x48) this.interrupt_flags |= 0x02;
+    else if (address === 0x50) this.interrupt_flags |= 0x04;
+    else if (address === 0x58) this.interrupt_flags |= 0x08;
+    else if (address === 0x60) this.interrupt_flags |= 0x10;
   }
   key_down(event) {
     var handled_key = true;
-    if (event.keyCode === 65)
-      this.buttons.a = true;
-    else if (event.keyCode === 90)
-      this.buttons.b = true;
-    else if (event.keyCode === 16)
-      this.buttons.select = true;
-    else if (event.keyCode === 13)
-      this.buttons.start = true;
-    else if (event.keyCode === 38)
-      this.buttons.up = true;
-    else if (event.keyCode === 40)
-      this.buttons.down = true;
-    else if (event.keyCode === 37)
-      this.buttons.left = true;
-    else if (event.keyCode === 39)
-      this.buttons.right = true;
-    else
-      handled_key = false;
-    if (handled_key)
+    if (event.keyCode === 65) this.buttons.a = true;
+    else if (event.keyCode === 90) this.buttons.b = true;
+    else if (event.keyCode === 16) this.buttons.select = true;
+    else if (event.keyCode === 13) this.buttons.start = true;
+    else if (event.keyCode === 38) this.buttons.up = true;
+    else if (event.keyCode === 40) this.buttons.down = true;
+    else if (event.keyCode === 37) this.buttons.left = true;
+    else if (event.keyCode === 39) this.buttons.right = true;
+    else handled_key = false;
+    if (handled_key) {
+      event.stopPropagation();
+      event.preventDefault();
       this.raise_interrupt(0x60);
+    }
   }
   key_up(event) {
-    if (event.keyCode === 65)
-      this.buttons.a = false;
-    else if (event.keyCode === 90)
-      this.buttons.b = false;
-    else if (event.keyCode === 16)
-      this.buttons.select = false;
-    else if (event.keyCode === 13)
-      this.buttons.start = false;
-    else if (event.keyCode === 38)
-      this.buttons.up = false;
-    else if (event.keyCode === 40)
-      this.buttons.down = false;
-    else if (event.keyCode === 37)
-      this.buttons.left = false;
-    else if (event.keyCode === 39)
-      this.buttons.right = false;
+    if (event.keyCode === 65) this.buttons.a = false;
+    else if (event.keyCode === 90) this.buttons.b = false;
+    else if (event.keyCode === 16) this.buttons.select = false;
+    else if (event.keyCode === 13) this.buttons.start = false;
+    else if (event.keyCode === 38) this.buttons.up = false;
+    else if (event.keyCode === 40) this.buttons.down = false;
+    else if (event.keyCode === 37) this.buttons.left = false;
+    else if (event.keyCode === 39) this.buttons.right = false;
   }
 }
-
