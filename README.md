@@ -18,5 +18,5 @@ https://www.youtube.com/watch?v=i08S5qolgvc
 https://mitxela.com/projects/swotGB/about  
 
 ゲームボーイの側部分  
-Pure CSS GameBoy  
-https://baumannzone.github.io/gameboy-css/  
+animated-gameboy-in-css
+https://github.com/bchanx/animated-gameboy-in-css

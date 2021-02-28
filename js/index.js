@@ -41,13 +41,17 @@ window.addEventListener(
 );
 function zoomGB(val){
   if(val < 4){
-    document.getElementById("gameboy_container").style.display = "block"
+    document.documentElement.style.background = ""
     let canvas = document.getElementById("output");
     canvas.style.height = "";
     canvas.style.width = "";
-    document.getElementById("screen_container").appendChild(canvas)
+    document.getElementById("colors").style.display = "block"
+    document.getElementById("gameboy_container").style.display = "block"
     document.getElementById("gameboy_container").style.transform = "scale("+val+")";
+    document.getElementById("screen").appendChild(canvas)
   }else{
+    document.documentElement.style.background = "#191919"
+    document.getElementById("colors").style.display = "none"
     document.getElementById("gameboy_container").style.display = "none"
     let canvas = document.getElementById("output");
     document.getElementById("full_container").appendChild(canvas)
