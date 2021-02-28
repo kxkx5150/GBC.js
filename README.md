@@ -7,6 +7,10 @@ DEMO
 https://kxkx5150.github.io/GBC.js/
 
 
+<br>
+
+Pokemon Red and Green for https://kxkx5150.github.io/GB.js/
+
 <br><br><br><br><br><br>
 
 参考にした実装  
